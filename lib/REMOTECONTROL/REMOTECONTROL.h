@@ -1,0 +1,57 @@
+#ifndef __REMOTECONTROL_H
+#define __REMOTECONTROL_H
+#include <IRremote.hpp>
+
+#if !defined(STR_HELPER)
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#endif
+
+//Constants for chinese IR Remote control BN59
+#define DECODE_SAMSUNG  // IR Protocol
+#define BUTTON_STAND_BY 0x2
+#define BUTTON_SOURCE 0x1
+#define BUTTON_NUMBER_1 0x4
+#define BUTTON_NUMBER_2 0x5
+#define BUTTON_NUMBER_3 0x6
+#define BUTTON_NUMBER_4 0x8
+#define BUTTON_NUMBER_5 0x9
+#define BUTTON_NUMBER_6 0xA
+#define BUTTON_NUMBER_7 0xC
+#define BUTTON_NUMBER_8 0xD
+#define BUTTON_NUMBER_9 0xE
+#define BUTTON_NUMBER_0 0x11
+#define BUTTON_TTX_MIX 0x2C
+#define BUTTON_PRE_CH 0x13
+#define BUTTON_VOLUME_UP 0x7
+#define BUTTON_VOLUME_DOWN 0xB
+#define BUTTON_CHANNEL_UP 0x12
+#define BUTTON_CHANNEL_DOWN 0x10
+#define BUTTON_MUTE 0xF
+#define BUTTON_CH_LIST 0x6B
+#define BUTTON_HOME_HOUSE 0x79
+#define BUTTON_NETFLIX 0xF3
+#define BUTTON_ROKUTEN_TV 0xBC
+#define BUTTON_PRIME_VIDEO 0xF4
+#define BUTTON_GUIDE 0x4F
+#define BUTTON_ARROW_UP 0x60
+#define BUTTON_ARROW_LEFT 0x65
+#define BUTTON_ARROW_RIGHT 0x62
+#define BUTTON_ARROW_DOWN 0x61
+#define BUTTON_ARROW_CENTER 0x68
+#define BUTTON_RETURN 0x58
+#define BUTTON_EXIT 0x2D
+#define BUTTON_RED_A 0x6C
+#define BUTTON_GREEN_B 0x14
+#define BUTTON_YELLOW_C 0x15
+#define BUTTON_BLUE_D 0x16
+#define BUTTON_SETTINGS 0x1A
+#define BUTTON_INFO 0x1F
+#define BUTTON_AD_SUBT 0x25
+#define BUTTON_STOP_RECTANGLE 0x46
+#define BUTTON_FAST_BACKWARD 0x45
+#define BUTTON_PLAY_TRIANGLE 0x47
+#define BUTTON_PAUSE 0x4A
+#define BUTTON_FAST_FORWARD 0x48
+
+#endif

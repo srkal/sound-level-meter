@@ -1,13 +1,6 @@
 #include "MICROPHONE.h"
 #include "PANEL.h"
-
-#define DECODE_NEC  // IR Protocol
-#if !defined(STR_HELPER)
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-#endif
-
-#include <IRremote.hpp> // infrared receiver
+#include "REMOTECONTROL.h"
 
 PANEL panel = PANEL();
 //MICROPHONE mic = MICROPHONE();
@@ -60,28 +53,29 @@ void loop() {
       //IrReceiver.printIRResultShort(&Serial);
       IrReceiver.resume(); // Enable receiving of the next value
 
-      if (IrReceiver.decodedIRData.command == 0x10) {
+      if (IrReceiver.decodedIRData.command == BUTTON_PRE_CH) {
           panel.rotate();
-      } else if (IrReceiver.decodedIRData.command == 0x11) {
+      } else if (IrReceiver.decodedIRData.command == BUTTON_NUMBER_1) { 
           panel.setDisplayMode(1);
-      } else if (IrReceiver.decodedIRData.command == 0x12) {
+      } else if (IrReceiver.decodedIRData.command == BUTTON_NUMBER_2) {
           panel.setDisplayMode(2);
-      } else if (IrReceiver.decodedIRData.command == 0x14) {
-          panel.setDisplayMode(4);
-      } else if (IrReceiver.decodedIRData.command == 0x16) {
+      } else if (IrReceiver.decodedIRData.command == BUTTON_SETTINGS) {
+          panel.setDisplayMode(4);  //limit settings
+      } else if (IrReceiver.decodedIRData.command == BUTTON_CHANNEL_UP) {
           panel.upBrightness();
-      } else if (IrReceiver.decodedIRData.command == 0x19) {
+      } else if (IrReceiver.decodedIRData.command == BUTTON_CHANNEL_DOWN) {
           panel.downBrightNess();
-      } else if (IrReceiver.decodedIRData.command == 0x13) {
-          panel.startAnimation(0, 100, 3);
+      } else if (IrReceiver.decodedIRData.command == BUTTON_PRIME_VIDEO) {
+          panel.startAnimation(0, 70, 6);  //test animation
       }
 
       if (panel.isNoiseLimitActive()) {
-        if (IrReceiver.decodedIRData.command == 0x00) {
+        if (IrReceiver.decodedIRData.command == BUTTON_ARROW_UP) {
           panel.upNoiseLimit();
-        } else if (IrReceiver.decodedIRData.command == 0x01) {
+        } else if (IrReceiver.decodedIRData.command == BUTTON_ARROW_DOWN) {
           panel.downNoiseLimit();
         }
       }
   }
 }
+

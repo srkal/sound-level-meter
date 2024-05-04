@@ -11,7 +11,7 @@ PANEL::~PANEL() {
 void PANEL::begin()
 {
     FastLED.addLeds<WS2812B, LED_STRIP_PIN, GRB>(leds, NUM_LEDS);
-    rotationCount = 3;
+    rotationCount = 1;
     displayMode = 1;
     brightness = 0;
     noiseLimit = 70;
@@ -24,7 +24,7 @@ void PANEL::stop() {
 
 void PANEL::redraw(double value) {
   if (!isAnimationActive() && !isNoiseLimitActive() && (value > noiseLimit)) {
-    startAnimation(0, 100, 3);
+    startAnimation(0, 70, 6);
   }
 
   switch (displayMode) {
@@ -208,3 +208,5 @@ const uint16_t PANEL::XY( uint8_t x, uint8_t y) {
     return (y * 8) + reverseX;
   }
 }
+
+//function to sort number array
