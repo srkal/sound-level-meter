@@ -116,15 +116,30 @@ void mic_i2s_reader_task(void* parameter) {
   }
 }
 
-class MICROPHONE {
-  public:
-    MICROPHONE();
-    ~MICROPHONE();
-    double evaluateNoise();
+double Leq_sum_sqr = 0;
+double Leq_samples = 0;
+double Leq_dB = 0;
 
-  private:
-    uint32_t samples = 0;
-    double sum_sqr = 0;
-    double noise_dB = 0;
-};    
+double getNoiseValue() {
+  sum_queue_t q;
+  if (xQueueReceive(samples_queue, &q, portMAX_DELAY) > 0) {
+    double short_RMS = sqrt(double(q.sum_sqr_SPL) / SAMPLES_SHORT);
+    double short_SPL_dB = MIC_OFFSET_DB + MIC_REF_DB + 20 * log10(short_RMS / MIC_REF_AMPL);
+
+    Leq_sum_sqr += q.sum_sqr_weighted;
+    Leq_samples += SAMPLES_SHORT;
+
+    if (Leq_samples >= SAMPLE_RATE * LEQ_PERIOD) {
+      double Leq_RMS = sqrt(Leq_sum_sqr / Leq_samples);
+      Leq_dB = MIC_OFFSET_DB + MIC_REF_DB + 20 * log10(Leq_RMS / MIC_REF_AMPL);
+      Leq_sum_sqr = 0;
+      Leq_samples = 0;
+      
+      Serial.printf("%.1f\n", Leq_dB);
+      //Serial.printf("%u processing ticks\n", q.proc_ticks);
+      return Leq_dB;
+    }
+  }
+  return 0.0;
+}
 #endif

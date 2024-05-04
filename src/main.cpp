@@ -3,7 +3,7 @@
 #include "REMOTECONTROL.h"
 
 PANEL panel = PANEL();
-//MICROPHONE mic = MICROPHONE();
+double noise = 0;
 
 void setup() {
   setCpuFrequencyMhz(160);
@@ -15,38 +15,15 @@ void setup() {
   xTaskCreate(mic_i2s_reader_task, "Mic I2S Reader", I2S_TASK_STACK, NULL, I2S_TASK_PRI, NULL);
 }
 
-
-uint32_t Leq_samples = 0;
-double Leq_sum_sqr = 0;
-double Leq_dB = 0;
-
 void loop() {
-  sum_queue_t q;
-  //sound level handling
   if (panel.isAnimationActive()) {
-    panel.redraw(Leq_dB);
-  }else {
-    if (xQueueReceive(samples_queue, &q, portMAX_DELAY) > 0) {
-      double short_RMS = sqrt(double(q.sum_sqr_SPL) / SAMPLES_SHORT);
-      double short_SPL_dB = MIC_OFFSET_DB + MIC_REF_DB + 20 * log10(short_RMS / MIC_REF_AMPL);
-
-      Leq_sum_sqr += q.sum_sqr_weighted;
-      Leq_samples += SAMPLES_SHORT;
-
-      if (Leq_samples >= SAMPLE_RATE * LEQ_PERIOD) {
-        double Leq_RMS = sqrt(Leq_sum_sqr / Leq_samples);
-        Leq_dB = MIC_OFFSET_DB + MIC_REF_DB + 20 * log10(Leq_RMS / MIC_REF_AMPL);
-        Leq_sum_sqr = 0;
-        Leq_samples = 0;
-        
-        Serial.printf("%.1f\n", Leq_dB);
-        panel.redraw(Leq_dB);
-        //Serial.printf("%u processing ticks\n", q.proc_ticks);
-      }
+    panel.redraw(noise);
+  } else {
+    noise = getNoiseValue();
+    if (noise > 0.0){ 
+      panel.redraw(noise);
     }
   }
-  //Serial.printf("--- %.1f\n", mic.evaluateNoise());
- 
 
   //IR decoder handling
   if (IrReceiver.decode()) {
