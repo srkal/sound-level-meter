@@ -11,10 +11,11 @@ PANEL::~PANEL() {
 void PANEL::begin()
 {
     FastLED.addLeds<WS2812B, LED_STRIP_PIN, GRB>(leds, NUM_LEDS);
-    rotationCount = 1;
-    displayMode = 1;
-    brightness = 0;
-    noiseLimit = 70;
+    nvs_flash_preferences.begin("panel_settings", false);
+    rotationCount = nvs_flash_preferences.getUShort("rotation", 1);
+    displayMode = nvs_flash_preferences.getUShort("mode", 1);
+    brightness = nvs_flash_preferences.getUShort("brightness", 1);
+    noiseLimit = nvs_flash_preferences.getUShort("limit", 70);
     for (int i=0; i<8; i++) history[i] = 0;
 }
 
@@ -178,26 +179,32 @@ void PANEL::mapCanvasToLeds() {
 
 void PANEL::rotate() {
   rotationCount = (rotationCount+1) % 4;
+  nvs_flash_preferences.putUShort("rotation", rotationCount);
 }
 
 void PANEL::upBrightness() {
   if (brightness < 3) brightness++;
+  nvs_flash_preferences.putUShort("brightness", brightness);
 }
 
 void PANEL::downBrightNess() {
   if (brightness > 0) brightness--;
+  nvs_flash_preferences.putUShort("brightness", brightness);
 }
 
 void PANEL::upNoiseLimit() {
   if (noiseLimit < 90) noiseLimit++;
+  nvs_flash_preferences.putUShort("limit", noiseLimit);
 }
 
 void PANEL::downNoiseLimit() {
   if (noiseLimit > 50) noiseLimit--;
+  nvs_flash_preferences.putUShort("limit", noiseLimit);
 }
 
 void PANEL::setDisplayMode(uint8_t mode) {
   displayMode = mode;
+  nvs_flash_preferences.putUShort("mode", displayMode);
 }
 
 const uint16_t PANEL::XY( uint8_t x, uint8_t y) {
@@ -208,5 +215,3 @@ const uint16_t PANEL::XY( uint8_t x, uint8_t y) {
     return (y * 8) + reverseX;
   }
 }
-
-//function to sort number array

@@ -3,6 +3,7 @@
 
 #include <FastLED.h>
 #include "picdata.h"
+#include "preferences.h"
 
 #define NUM_LEDS 64
 #define LED_STRIP_PIN 2
@@ -39,8 +40,9 @@ class PANEL {
     uint8_t animationTotalFrames;
     uint8_t animationDelay;
     uint8_t animationRepeatCount;
-
     long animationStartedMiliseconds;
+    Preferences nvs_flash_preferences;
+
     void showDecibelOnCanvas(double value);
     void showHistoryOnCanvas(double value);
     void showNoiseLimitOnCanvas();
