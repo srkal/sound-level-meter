@@ -1,9 +1,12 @@
 #include "MICROPHONE.h"
 #include "PANEL.h"
 #include "REMOTECONTROL.h"
+#include <WiFiManager.h>
+#include "NETWORKTIME.h"
 
 PANEL panel = PANEL();
 double noise = 0;
+WiFiManager wifiManager;
 
 void setup() {
   setCpuFrequencyMhz(160);
@@ -13,9 +16,15 @@ void setup() {
   IrReceiver.begin(34, DISABLE_LED_FEEDBACK); // PIN 34 is input only
   samples_queue = xQueueCreate(8, sizeof(sum_queue_t));
   xTaskCreate(mic_i2s_reader_task, "Mic I2S Reader", I2S_TASK_STACK, NULL, I2S_TASK_PRI, NULL);
+  wifiManager.setConfigPortalBlocking(false);
+  wifiManager.autoConnect(); // auto generated AP name from chipid, no password
+  ntpInit();
 }
 
 void loop() {
+  wifiManager.process();
+  ntpTimeUpdate();
+
   if (panel.isAnimationActive()) {
     panel.redraw(noise);
   } else {
