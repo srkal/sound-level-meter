@@ -8,6 +8,20 @@
 #define NUM_LEDS 64
 #define LED_STRIP_PIN 2
 
+#define DISPLAY_MODE_PREVIOUS 0
+#define DISPLAY_MODE_BARS 1
+#define DISPLAY_MODE_NUMBERS 2
+#define DISPLAY_MODE_ANIMATION 3
+#define DISPLAY_MODE_SETTINGS 4
+#define DISPLAY_MODE_FW_UPDATE 5
+
+#define NVS_GROUP_NAME "panel_settings"
+#define NVS_KEY_BRIGHTNESS "brightness"
+#define NVS_KEY_LIMIT "limit"
+#define NVS_KEY_ROTATION "rotation"
+#define NVS_KEY_MODE "mode"
+
+
 class PANEL {
   public:
     PANEL();
@@ -25,6 +39,9 @@ class PANEL {
     void showAnimationOnCanvas();
     uint8_t isAnimationActive();
     uint8_t isNoiseLimitActive();
+    uint8_t isFirmwareUpdateActive();
+    void setFirmwareUpdateProgress(uint8_t percent);
+    Preferences getPreferences();
 
   private:
     CRGBArray<NUM_LEDS> leds;
@@ -40,12 +57,14 @@ class PANEL {
     uint8_t animationTotalFrames;
     uint8_t animationDelay;
     uint8_t animationRepeatCount;
+    uint8_t firmwareUpdateProgress;
     long animationStartedMiliseconds;
     Preferences nvs_flash_preferences;
 
     void showDecibelOnCanvas(double value);
     void showHistoryOnCanvas(double value);
     void showNoiseLimitOnCanvas();
+    void showFirmwareUpdateProgressOnCanvas();
     void rotateCanvas(u_int16_t count);
     void shiftLedBrightness();
     void mapCanvasToLeds();

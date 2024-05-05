@@ -1,7 +1,6 @@
 #include "PANEL.h"
 
 PANEL::PANEL() {
-    begin();
 }
 
 PANEL::~PANEL() {
@@ -11,11 +10,11 @@ PANEL::~PANEL() {
 void PANEL::begin()
 {
     FastLED.addLeds<WS2812B, LED_STRIP_PIN, GRB>(leds, NUM_LEDS);
-    nvs_flash_preferences.begin("panel_settings", false);
-    rotationCount = nvs_flash_preferences.getUShort("rotation", 1);
-    displayMode = nvs_flash_preferences.getUShort("mode", 1);
-    brightness = nvs_flash_preferences.getUShort("brightness", 1);
-    noiseLimit = nvs_flash_preferences.getUShort("limit", 70);
+    nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
+    rotationCount = nvs_flash_preferences.getUShort(NVS_KEY_ROTATION, 1);
+    displayMode = nvs_flash_preferences.getUShort(NVS_KEY_MODE, DISPLAY_MODE_BARS);
+    brightness = nvs_flash_preferences.getUShort(NVS_KEY_BRIGHTNESS, 1);
+    noiseLimit = nvs_flash_preferences.getUShort(NVS_KEY_LIMIT, 70);
     for (int i=0; i<8; i++) history[i] = 0;
 }
 
@@ -27,19 +26,21 @@ void PANEL::redraw(double value) {
   if (!isAnimationActive() && !isNoiseLimitActive() && (value > noiseLimit)) {
     startAnimation(0, 70, 6);
   }
-
   switch (displayMode) {
-    case 1:
+    case DISPLAY_MODE_BARS:
       showHistoryOnCanvas(value);
       break;
-    case 2:
+    case DISPLAY_MODE_NUMBERS:
       showDecibelOnCanvas(value);
       break;
-    case 3:
+    case DISPLAY_MODE_ANIMATION:
       showAnimationOnCanvas();
       break;
-    case 4:
+    case DISPLAY_MODE_SETTINGS:
       showNoiseLimitOnCanvas();
+      break;
+    case DISPLAY_MODE_FW_UPDATE:
+      showFirmwareUpdateProgressOnCanvas();
       break;
     default:
       showHistoryOnCanvas(value);
@@ -50,6 +51,9 @@ void PANEL::redraw(double value) {
   FastLED.show();
 }
 
+void PANEL::setFirmwareUpdateProgress(uint8_t percent) {
+  firmwareUpdateProgress = percent;
+}
 
 void PANEL::startAnimation(uint8_t type, uint8_t delay, uint8_t repeat) {
   animationSelectedType = type;
@@ -59,17 +63,21 @@ void PANEL::startAnimation(uint8_t type, uint8_t delay, uint8_t repeat) {
   animationTotalFrames = 8;
   animationStartedMiliseconds = millis();
   lastDisplayMode = displayMode;
-  if (displayMode != 3) lastDisplayMode = displayMode;
-  displayMode = 3;
+  if (displayMode != DISPLAY_MODE_ANIMATION) lastDisplayMode = displayMode;
+  displayMode = DISPLAY_MODE_ANIMATION;
   showAnimationOnCanvas();
 }
 
 uint8_t PANEL::isAnimationActive() {
-  return (displayMode == 3);
+  return (displayMode == DISPLAY_MODE_ANIMATION);
 }
 
 uint8_t PANEL::isNoiseLimitActive() {
-  return (displayMode == 4);
+  return (displayMode == DISPLAY_MODE_SETTINGS);
+}
+
+uint8_t PANEL::isFirmwareUpdateActive() {
+  return (displayMode == DISPLAY_MODE_FW_UPDATE);
 }
 
 void PANEL::showAnimationOnCanvas() {
@@ -84,6 +92,25 @@ void PANEL::showAnimationOnCanvas() {
   for (uint8_t y = 0; y < 8; y++) {
     for (uint8_t x = 0; x < 8; x++) {
       canvas[x][y] = paleta[siren[animationCurrentFrame][(x%8)+8*(y%8)]];
+    }
+  }
+}
+
+void PANEL::showFirmwareUpdateProgressOnCanvas() {
+  uint8_t intValue = firmwareUpdateProgress;
+  if (intValue < 0) intValue = 0;
+  if (intValue > 99) intValue = 99;
+  uint8_t vLo = intValue % 10;
+  uint8_t vHi = intValue / 10;
+
+  for (uint8_t y = 0; y < 8; y++) {
+    for (uint8_t x = 0; x < 4; x++) {
+      canvas[x][y] = paleta[basicNumber[vHi][(x%4)+4*(y%8)]];
+    }
+  }
+  for (uint8_t y = 0; y < 8; y++) {
+    for (uint8_t x = 4; x < 8; x++) {
+      canvas[x][y] = paleta[basicNumber[vLo][(x%4)+4*(y%8)]];
     }
   }
 }
@@ -179,32 +206,49 @@ void PANEL::mapCanvasToLeds() {
 
 void PANEL::rotate() {
   rotationCount = (rotationCount+1) % 4;
-  nvs_flash_preferences.putUShort("rotation", rotationCount);
+  nvs_flash_preferences.end();
+  nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
+  nvs_flash_preferences.putUShort(NVS_KEY_ROTATION, rotationCount);
 }
 
 void PANEL::upBrightness() {
   if (brightness < 3) brightness++;
-  nvs_flash_preferences.putUShort("brightness", brightness);
+  nvs_flash_preferences.end();
+  nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
+  nvs_flash_preferences.putUShort(NVS_KEY_BRIGHTNESS, brightness);
 }
 
 void PANEL::downBrightNess() {
   if (brightness > 0) brightness--;
-  nvs_flash_preferences.putUShort("brightness", brightness);
+  nvs_flash_preferences.end();
+  nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
+  nvs_flash_preferences.putUShort(NVS_KEY_BRIGHTNESS, brightness);
 }
 
 void PANEL::upNoiseLimit() {
   if (noiseLimit < 90) noiseLimit++;
-  nvs_flash_preferences.putUShort("limit", noiseLimit);
+  nvs_flash_preferences.end();
+  nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
+  nvs_flash_preferences.putUShort(NVS_KEY_LIMIT, noiseLimit);
 }
 
 void PANEL::downNoiseLimit() {
   if (noiseLimit > 50) noiseLimit--;
-  nvs_flash_preferences.putUShort("limit", noiseLimit);
+  nvs_flash_preferences.end();
+  nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
+  nvs_flash_preferences.putUShort(NVS_KEY_LIMIT, noiseLimit);
 }
 
 void PANEL::setDisplayMode(uint8_t mode) {
-  displayMode = mode;
-  nvs_flash_preferences.putUShort("mode", displayMode);
+  if ((mode == DISPLAY_MODE_PREVIOUS) and (lastDisplayMode > DISPLAY_MODE_PREVIOUS)) {
+    displayMode = lastDisplayMode;
+  } else {
+    lastDisplayMode = displayMode;
+    displayMode = mode;
+  }
+  nvs_flash_preferences.end();
+  nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
+  nvs_flash_preferences.putUShort(NVS_KEY_MODE, displayMode);
 }
 
 const uint16_t PANEL::XY( uint8_t x, uint8_t y) {
@@ -214,4 +258,8 @@ const uint16_t PANEL::XY( uint8_t x, uint8_t y) {
     uint8_t reverseX = 7 - x;
     return (y * 8) + reverseX;
   }
+}
+
+Preferences PANEL::getPreferences() {
+  return nvs_flash_preferences;
 }

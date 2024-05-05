@@ -3,6 +3,7 @@
 #include "REMOTECONTROL.h"
 #include <WiFiManager.h>
 #include "NETWORKTIME.h"
+#include "OTAUPDATE.h"
 
 PANEL panel = PANEL();
 double noise = 0;
@@ -19,11 +20,17 @@ void setup() {
   wifiManager.setConfigPortalBlocking(false);
   wifiManager.autoConnect(); // auto generated AP name from chipid, no password
   ntpInit();
+  otaInit(panel);
 }
 
 void loop() {
+  if (panel.isFirmwareUpdateActive()) {
+    return;
+  }
+
   wifiManager.process();
   ntpTimeUpdate();
+  otaUpdate();
 
   if (panel.isAnimationActive()) {
     panel.redraw(noise);
@@ -42,11 +49,11 @@ void loop() {
       if (IrReceiver.decodedIRData.command == BUTTON_PRE_CH) {
           panel.rotate();
       } else if (IrReceiver.decodedIRData.command == BUTTON_NUMBER_1) { 
-          panel.setDisplayMode(1);
+          panel.setDisplayMode(DISPLAY_MODE_BARS);
       } else if (IrReceiver.decodedIRData.command == BUTTON_NUMBER_2) {
-          panel.setDisplayMode(2);
+          panel.setDisplayMode(DISPLAY_MODE_NUMBERS);
       } else if (IrReceiver.decodedIRData.command == BUTTON_SETTINGS) {
-          panel.setDisplayMode(4);  //limit settings
+          panel.setDisplayMode(DISPLAY_MODE_SETTINGS);  //limit settings
       } else if (IrReceiver.decodedIRData.command == BUTTON_CHANNEL_UP) {
           panel.upBrightness();
       } else if (IrReceiver.decodedIRData.command == BUTTON_CHANNEL_DOWN) {

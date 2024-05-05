@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-#define TIME_REFRESH_MILISECONDS 120000L
+#define TIME_REFRESH_MILISECONDS 960000L
 
 WiFiUDP wifiUdp;
 NTP ntp(wifiUdp);
