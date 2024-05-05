@@ -9,7 +9,9 @@ Sound level meter for workplace with additional features
 * powered by standard type A USB adapter 5V 2A
 
 ## Additional Features
-* TODO
+* display settings (brightness, rotation, mode) and noise limit are stored to non-volatile flash memory, persist after reboot or power loss
+* wifi-manager supported, when connection to last wifi settings fails, switch to Access Point mode and provide interactive web page settings on 192.168.4.1
+* automatic time synchronization using Network Time Protocol with correct STD/DST time shifting for central Europe
 
 ## Used hardware parts
 * ESP32 WROOM development module with basic 4MB Flash, without additional PSRAM
