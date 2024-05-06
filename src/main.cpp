@@ -43,32 +43,33 @@ void loop() {
 
   //IR decoder handling
   if (IrReceiver.decode()) {
-      //IrReceiver.printIRResultShort(&Serial);
-      IrReceiver.resume(); // Enable receiving of the next value
+    //IrReceiver.printIRResultShort(&Serial);
+    IrReceiver.resume(); // Enable receiving of the next value
 
-      if (IrReceiver.decodedIRData.command == BUTTON_PRE_CH) {
-          panel.rotate();
-      } else if (IrReceiver.decodedIRData.command == BUTTON_NUMBER_1) { 
-          panel.setDisplayMode(DISPLAY_MODE_BARS);
-      } else if (IrReceiver.decodedIRData.command == BUTTON_NUMBER_2) {
-          panel.setDisplayMode(DISPLAY_MODE_NUMBERS);
-      } else if (IrReceiver.decodedIRData.command == BUTTON_SETTINGS) {
-          panel.setDisplayMode(DISPLAY_MODE_SETTINGS);  //limit settings
-      } else if (IrReceiver.decodedIRData.command == BUTTON_CHANNEL_UP) {
-          panel.upBrightness();
-      } else if (IrReceiver.decodedIRData.command == BUTTON_CHANNEL_DOWN) {
-          panel.downBrightNess();
-      } else if (IrReceiver.decodedIRData.command == BUTTON_PRIME_VIDEO) {
-          panel.startAnimation(0, 70, 6);  //test animation
+    if (!(IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT)) {
+      if (checkIRCommand(SAMSUNG, IR_SAMSUNG_PRE_CH) || checkIRCommand(NEC, IR_NEC_NUMBER_0)) {
+        panel.rotate();
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_NUMBER_1) || checkIRCommand(NEC, IR_NEC_NUMBER_1)) {
+        panel.setDisplayMode(DISPLAY_MODE_BARS);
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_NUMBER_2) || checkIRCommand(NEC, IR_NEC_NUMBER_2)) {
+        panel.setDisplayMode(DISPLAY_MODE_NUMBERS);
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_SETTINGS) || checkIRCommand(NEC, IR_NEC_POUND)) {
+        panel.setDisplayMode(DISPLAY_MODE_SETTINGS);  //limit settings
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_CHANNEL_UP) || checkIRCommand(NEC, IR_NEC_UP)) {
+        panel.upBrightness();
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_CHANNEL_DOWN) || checkIRCommand(NEC, IR_NEC_DOWN)) {
+        panel.downBrightNess();
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_PRIME_VIDEO) || checkIRCommand(NEC, IR_NEC_STAR)) {
+        panel.startAnimation(0, 70, 6);  //test animation
       }
 
       if (panel.isNoiseLimitActive()) {
-        if (IrReceiver.decodedIRData.command == BUTTON_ARROW_UP) {
+        if (checkIRCommand(SAMSUNG, IR_SAMSUNG_ARROW_UP) || checkIRCommand(NEC, IR_NEC_RIGHT)) {
           panel.upNoiseLimit();
-        } else if (IrReceiver.decodedIRData.command == BUTTON_ARROW_DOWN) {
+        } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_ARROW_DOWN) || checkIRCommand(NEC, IR_NEC_LEFT)) {
           panel.downNoiseLimit();
         }
       }
+    }
   }
 }
-

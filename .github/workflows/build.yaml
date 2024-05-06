@@ -1,0 +1,45 @@
+name: Build
+on: workflow_dispatch
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Build PlatformIO Project
+        run: pio run
+      - name: Get version
+        run: echo "VERSION=$(git rev-list HEAD --count)" >> "$GITHUB_ENV"
+      - name: Prepare manifest
+        run: |
+          cat << END > OTAUpdateSettings.json
+          {
+              "type": "sound-level-meter-hw-v1",
+              "version": "${VERSION}",
+              "url": "https://github.com/srkal/sound-level-meter/releases/latest/download/firmware.bin"
+          }
+          END
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          files: |
+            .pio/build/esp32dev/firmware.bin
+            .pio/build/esp32dev/firmware.elf
+            OTAUpdateSettings.json
