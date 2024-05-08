@@ -3,7 +3,7 @@
 
 #include <FastLED.h>
 #include "picdata.h"
-#include "preferences.h"
+#include "Preferences.h"
 
 #define NUM_LEDS 64
 #define LED_STRIP_PIN 2
