@@ -1,9 +1,18 @@
 #ifndef __PANEL_H
 #define __PANEL_H
 
+#define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 #include "picdata.h"
 #include "Preferences.h"
+#include <WiFiManager.h>
+#include <HTTPClient.h>
+#include <NTP.h>
+
+//#define CLEAN_NVS
+#ifdef CLEAN_NVS
+#include <nvs_flash.h>
+#endif
 
 #define NUM_LEDS 64
 #define LED_STRIP_PIN 2
@@ -20,7 +29,11 @@
 #define NVS_KEY_LIMIT "limit"
 #define NVS_KEY_ROTATION "rotation"
 #define NVS_KEY_MODE "mode"
+#define NVS_KEY_FW_VERSION "fw_version"
 
+#define VALUES_COUNT_FOR_AVERAGE 2
+
+static const char* webAppUrl PROGMEM = "https://script.google.com/macros/s/AKfycbwk-V7Gi5qfe1mB0oJW8vCK2h16LOPsM1cRM_nt1S-DpFK7vW8TO1aFmtJVb_dFNpl3Rg/exec";
 
 class PANEL {
   public:
@@ -42,6 +55,7 @@ class PANEL {
     uint8_t isFirmwareUpdateActive();
     void setFirmwareUpdateProgress(uint8_t percent);
     Preferences getPreferences();
+    void setNtp(NTP *ntpObject);
 
   private:
     CRGBArray<NUM_LEDS> leds;
@@ -60,14 +74,21 @@ class PANEL {
     uint8_t firmwareUpdateProgress;
     long animationStartedMiliseconds;
     Preferences nvs_flash_preferences;
+    String chipId;
+    NTP *ntp;
 
     void showDecibelOnCanvas(double value);
     void showHistoryOnCanvas(double value);
     void showNoiseLimitOnCanvas();
     void showFirmwareUpdateProgressOnCanvas();
+    void showWifiErrorOnCanvas();
     void rotateCanvas(u_int16_t count);
     void shiftLedBrightness();
     void mapCanvasToLeds();
     const uint16_t XY( uint8_t x, uint8_t y);
+    void sendDataToGoogleSheet(float decibels, uint8_t version);
+    void optionalInit();
+    double historyAverage(int count, double newValue);
 };
+
 #endif

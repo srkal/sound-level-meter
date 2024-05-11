@@ -3,9 +3,9 @@
 #include "REMOTECONTROL.h"
 #include <WiFiManager.h>
 #include "NETWORKTIME.h"
+PANEL panel = PANEL();
 #include "OTAUPDATE.h"
 
-PANEL panel = PANEL();
 double noise = 0;
 WiFiManager wifiManager;
 
@@ -18,9 +18,11 @@ void setup() {
   samples_queue = xQueueCreate(8, sizeof(sum_queue_t));
   xTaskCreate(mic_i2s_reader_task, "Mic I2S Reader", I2S_TASK_STACK, NULL, I2S_TASK_PRI, NULL);
   wifiManager.setConfigPortalBlocking(false);
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);
   wifiManager.autoConnect(); // auto generated AP name from chipid, no password
   ntpInit();
-  otaInit(panel);
+  panel.setNtp(&ntp);
+  otaInit();
 }
 
 void loop() {
@@ -49,24 +51,24 @@ void loop() {
     if (!(IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT)) {
       if (checkIRCommand(SAMSUNG, IR_SAMSUNG_PRE_CH) || checkIRCommand(NEC, IR_NEC_NUMBER_0)) {
         panel.rotate();
-      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_NUMBER_1) || checkIRCommand(NEC, IR_NEC_NUMBER_1)) {
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_NUMBER_1) || checkIRCommand(NEC, IR_NEC_NUMBER_1) || checkIRCommand(NEC, IR_NEC2_NUMBER_1)) {
         panel.setDisplayMode(DISPLAY_MODE_BARS);
-      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_NUMBER_2) || checkIRCommand(NEC, IR_NEC_NUMBER_2)) {
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_NUMBER_2) || checkIRCommand(NEC, IR_NEC_NUMBER_2) || checkIRCommand(NEC, IR_NEC2_NUMBER_2)) {
         panel.setDisplayMode(DISPLAY_MODE_NUMBERS);
-      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_SETTINGS) || checkIRCommand(NEC, IR_NEC_POUND)) {
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_SETTINGS) || checkIRCommand(NEC, IR_NEC_POUND) || checkIRCommand(NEC, IR_NEC2_TIME_SHIFT)) {
         panel.setDisplayMode(DISPLAY_MODE_SETTINGS);  //limit settings
-      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_CHANNEL_UP) || checkIRCommand(NEC, IR_NEC_UP)) {
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_CHANNEL_UP) || checkIRCommand(NEC, IR_NEC_UP) || checkIRCommand(NEC, IR_NEC2_CHANNEL_UP)) {
         panel.upBrightness();
-      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_CHANNEL_DOWN) || checkIRCommand(NEC, IR_NEC_DOWN)) {
+      } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_CHANNEL_DOWN) || checkIRCommand(NEC, IR_NEC_DOWN) || checkIRCommand(NEC, IR_NEC2_CHANNEL_DOWN)) {
         panel.downBrightNess();
       } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_PRIME_VIDEO) || checkIRCommand(NEC, IR_NEC_STAR)) {
         panel.startAnimation(0, 70, 6);  //test animation
       }
 
       if (panel.isNoiseLimitActive()) {
-        if (checkIRCommand(SAMSUNG, IR_SAMSUNG_ARROW_UP) || checkIRCommand(NEC, IR_NEC_RIGHT)) {
+        if (checkIRCommand(SAMSUNG, IR_SAMSUNG_ARROW_UP) || checkIRCommand(NEC, IR_NEC_RIGHT) || checkIRCommand(NEC, IR_NEC2_VOLUME_UP)) {
           panel.upNoiseLimit();
-        } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_ARROW_DOWN) || checkIRCommand(NEC, IR_NEC_LEFT)) {
+        } else if (checkIRCommand(SAMSUNG, IR_SAMSUNG_ARROW_DOWN) || checkIRCommand(NEC, IR_NEC_LEFT) || checkIRCommand(NEC, IR_NEC2_VOLUME_DOWN)) {
           panel.downNoiseLimit();
         }
       }

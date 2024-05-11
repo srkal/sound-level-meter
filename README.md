@@ -3,7 +3,7 @@ Sound level meter for workplace with additional features
 
 ## Basic Features
 * continuous measure of the sound level, use standard decibel scale
-* average values from last time interval
+* average values from last measures
 * display warning when configured level is exceeded
 * support IR remote controler for configuration and mode change
 * powered by standard type A USB adapter 5V 2A
@@ -13,6 +13,7 @@ Sound level meter for workplace with additional features
 * wifi-manager supported, when connection to last wifi settings fails, switch to Access Point mode and provide interactive web page settings on 192.168.4.1
 * automatic time synchronization using Network Time Protocol with correct STD/DST time shifting for central Europe
 * periodical check of new firmware versions from server and automatic download and OTA update when found
+* when the configured noise level is exceeded, call Google Web-app with current average, chip id, firmware version and local time - will write log entry in Google Sheet
 
 ## Used hardware parts
 * ESP32 WROOM development module with basic 4MB Flash, without additional PSRAM

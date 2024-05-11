@@ -9,12 +9,14 @@ PANEL::~PANEL() {
 
 void PANEL::begin()
 {
+    optionalInit();
     FastLED.addLeds<WS2812B, LED_STRIP_PIN, GRB>(leds, NUM_LEDS);
     nvs_flash_preferences.begin(NVS_GROUP_NAME, false);
     rotationCount = nvs_flash_preferences.getUShort(NVS_KEY_ROTATION, 1);
     displayMode = nvs_flash_preferences.getUShort(NVS_KEY_MODE, DISPLAY_MODE_BARS);
     brightness = nvs_flash_preferences.getUShort(NVS_KEY_BRIGHTNESS, 1);
     noiseLimit = nvs_flash_preferences.getUShort(NVS_KEY_LIMIT, 70);
+    chipId = String(WIFI_getChipId(),HEX);
     for (int i=0; i<8; i++) history[i] = 0;
 }
 
@@ -23,8 +25,10 @@ void PANEL::stop() {
 }
 
 void PANEL::redraw(double value) {
-  if (!isAnimationActive() && !isNoiseLimitActive() && (value > noiseLimit)) {
+  double averageFromHistory = historyAverage(VALUES_COUNT_FOR_AVERAGE, value);
+  if (!isAnimationActive() && !isNoiseLimitActive() && (averageFromHistory > noiseLimit)) {
     startAnimation(0, 70, 6);
+    sendDataToGoogleSheet(averageFromHistory, nvs_flash_preferences.getUShort(NVS_KEY_FW_VERSION, 1));
   }
   switch (displayMode) {
     case DISPLAY_MODE_BARS:
@@ -45,6 +49,7 @@ void PANEL::redraw(double value) {
     default:
       showHistoryOnCanvas(value);
   }
+  showWifiErrorOnCanvas();
   rotateCanvas(rotationCount);
   mapCanvasToLeds();
   shiftLedBrightness();
@@ -196,6 +201,12 @@ void PANEL::shiftLedBrightness() {
   }
 }
   
+void PANEL::showWifiErrorOnCanvas() {
+  if (WiFi.status() != WL_CONNECTED) {
+    leds[XY(0,0)] = paleta[9];
+  }
+} 
+
 void PANEL::mapCanvasToLeds() {
   for (uint8_t y = 0; y < 8; y++) {
     for (uint8_t x = 0; x < 8; x++) {
@@ -263,3 +274,48 @@ const uint16_t PANEL::XY( uint8_t x, uint8_t y) {
 Preferences PANEL::getPreferences() {
   return nvs_flash_preferences;
 }
+
+void PANEL::sendDataToGoogleSheet(float decibels, uint8_t version) {
+  HTTPClient http;
+  http.setTimeout(15000);
+
+  if (WiFi.status() == WL_CONNECTED) {
+    String serverPath = String(webAppUrl) + "?cpuid=" + String(WIFI_getChipId(),HEX) 
+      + "&decibels=" + String(decibels) + "&fwversion=" + String(version) + "&localtime=" + ntp->formattedTime("%d.%m.%Y+%H:%M:%S");
+
+    if (http.begin(serverPath.c_str())) {
+      http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+      int httpCode = http.GET();
+      if (httpCode > 0) {
+        Serial.print("Server response code: ");
+        Serial.println(httpCode);
+      } else {
+        Serial.print("HTTP GET request failed with error code: ");
+        Serial.println(httpCode);
+      }
+      http.end();
+    } else {
+      Serial.println("Unable to connect to the server");
+    }
+  }
+}
+
+void PANEL::setNtp(NTP *ntpObject) {
+  ntp = ntpObject;
+}
+
+double PANEL::historyAverage(int count, double newValue) {
+  double sum = newValue;
+  for (int i=7; i>7-count; i--) {
+    sum += history[i];
+  }
+  return sum / (count+1);
+}
+
+void PANEL::optionalInit() {
+  #ifdef CLEAN_NVS
+  nvs_flash_erase();
+  nvs_flash_init();
+  #endif
+}
+
